@@ -1,147 +1,77 @@
-```
 # Mini Hyperconverged Infrastructure (HCI) Lab
 
-This repository contains a hands-on **mini Hyperconverged Infrastructure (HCI) lab** built to understand how modern HCI platforms converge **compute, storage, and networking** on the same set of nodes.
+A local, 3-node HCI-style lab built with Vagrant and VirtualBox to explore how compute, storage, and networking can be converged on the same nodes. This repo provides a reproducible baseline cluster you can extend with software-defined storage, workloads, and hybrid connectivity.
 
-The project is inspired by real-world enterprise HCI solutions and is designed as a **learning + showcase project** that can be shared on GitHub and LinkedIn.
+## What You Get
 
----
+- 3 Ubuntu 22.04 LTS VMs (Jammy)
+- Private network for node-to-node communication
+- Consistent hostnames and IPs for predictable lab work
 
-## 🎯 Project Goals
+## Architecture
 
-- Build a multi-node HCI-style cluster locally
-- Simulate compute, storage, and network convergence
-- Implement software-defined storage
-- Run workloads on converged nodes
-- Extend the lab to a hybrid cloud setup using AWS
+- Nodes: `hci-node-1`, `hci-node-2`, `hci-node-3`
+- Private network: `192.168.56.0/24`
+- IPs:
+  - `hci-node-1`: `192.168.56.11`
+  - `hci-node-2`: `192.168.56.12`
+  - `hci-node-3`: `192.168.56.13`
+- VM sizing: 2 vCPU, 2 GB RAM each
 
----
-
-## 🧱 Architecture Overview
-
-### Local Cluster
-- **3 Ubuntu virtual machines**
-- Provisioned using **Vagrant + VirtualBox**
-- Private network for inter-node communication
-- Local disks pooled using **software-defined storage**
-
-Each node acts as:
-- A compute node  
-- A storage node  
-- A network participant  
-
-This mirrors the core idea of Hyperconverged Infrastructure.
-
-### Hybrid Cloud (Planned)
-- AWS EC2 instance
-- Used for backup, replication, or disaster recovery
-- Secure connectivity from on-prem lab to cloud
-
----
-
-## 🛠️ Technology Stack
-
-- **Vagrant** – VM orchestration
-- **VirtualBox** – Virtualization provider
-- **Ubuntu 22.04 LTS** – Base OS
-- **GlusterFS** – Software-defined storage
-- **Docker** – Application workloads
-- **AWS EC2** – Hybrid cloud extension (upcoming)
-
----
-
-## 📁 Repository Structure
-
-```
-
-mini-hyperconverged-infra-lab/
-├── Vagrantfile
-├── README.md
-├── docs/
-│   ├── architecture.md
-│   └── hybrid-design.md
-└── scripts/
-├── setup-storage.sh
-└── install-dependencies.sh
-
-```
-
----
-
-## ⚙️ Prerequisites
+## Requirements
 
 - Vagrant
 - VirtualBox
-- Git
-- Minimum **8 GB RAM** on host system
-- Linux / macOS / Windows host
+- 8 GB+ RAM available on the host
+- macOS, Linux, or Windows
 
----
+## Quick Start
 
-## 🚀 Getting Started
-
-### Clone the Repository
 ```bash
 git clone https://github.com/karandesai2005/mini-hyperconverged-infra-lab.git
 cd mini-hyperconverged-infra-lab
-```
-
-### Start the Cluster
-
-```bash
 vagrant up
 ```
 
-### SSH into a Node
+SSH into a node:
 
 ```bash
 vagrant ssh hci-node-1
 ```
 
----
+Check connectivity (from any node):
 
-## 📊 Current Progress
+```bash
+ping -c 2 192.168.56.12
+ping -c 2 192.168.56.13
+```
 
-* [x] Repository initialized
-* [x] 3-node cluster provisioned
-* [x] Private networking configured
-* [ ] Attach and pool storage disks
-* [ ] Configure GlusterFS
-* [ ] Deploy workloads
-* [ ] Add AWS hybrid connectivity
-* [ ] Monitoring and observability
-
----
-
-## 📚 What This Project Demonstrates
-
-* Hyperconverged Infrastructure fundamentals
-* Software-defined storage concepts
-* Cluster networking
-* Node-to-node communication
-* Hybrid cloud architecture basics
-* Practical infrastructure design
-
----
-
-## 🔮 Future Enhancements
-
-* Replace GlusterFS with **Ceph**
-* Add **Prometheus + Grafana** monitoring
-* Automate provisioning using **Ansible**
-* Implement node failure and recovery testing
-* CI/CD for infrastructure validation
-
----
-
-## 🧠 Motivation
-
-This project was built to reinforce theoretical knowledge of cloud and infrastructure concepts through **hands-on implementation**, and to create a practical portfolio project demonstrating real-world systems thinking.
-
----
-
-## 📜 License
-
-This project is licensed under the **MIT License**.
+## Repository Layout
 
 ```
+.
+├── Vagrantfile
+├── README.md
+└── scripts/
+```
+
+## Provisioning
+
+The `Vagrantfile` runs a shell provisioner at `scripts/common.sh`. Create that file (or update it) to install storage software, container runtimes, monitoring, or configuration tools.
+
+## Roadmap
+
+- Add additional virtual disks per node
+- Configure a software-defined storage layer
+- Deploy a containerized workload
+- Add monitoring and observability
+- Explore hybrid connectivity (e.g., VPN to cloud)
+
+## Troubleshooting
+
+- If `vagrant up` fails, ensure VirtualBox is installed and the `ubuntu/jammy64` box is available.
+- If networking is blocked, verify your host-only adapter settings in VirtualBox.
+
+## License
+
+MIT
