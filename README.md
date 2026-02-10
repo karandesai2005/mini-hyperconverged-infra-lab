@@ -1,31 +1,190 @@
-# Mini Hyperconverged Infrastructure (HCI) Lab
+# Mini Hyperconverged Infrastructure (HCI) Lab with GlusterFS
 
-A local, 3-node HCI-style lab built with Vagrant and VirtualBox to explore how compute, storage, and networking can be converged on the same nodes. This repo provides a reproducible baseline cluster you can extend with software-defined storage, workloads, and hybrid connectivity.
+A **3-node Hyperconverged Infrastructure (HCI) simulation** built using **Vagrant**, **VirtualBox**, and **GlusterFS**.
+This project demonstrates how **compute, storage, and networking** can be converged on the same nodes using open-source tools.
 
-## What You Get
+---
 
-- 3 Ubuntu 22.04 LTS VMs (Jammy)
-- Private network for node-to-node communication
-- Consistent hostnames and IPs for predictable lab work
+## 📌 Project Overview
 
-## Architecture
+Traditional data centers separate compute, storage, and networking into different systems.
+**Hyperconverged Infrastructure (HCI)** combines all three into the same nodes, simplifying management and improving scalability.
 
-- Nodes: `hci-node-1`, `hci-node-2`, `hci-node-3`
-- Private network: `192.168.56.0/24`
-- IPs:
-  - `hci-node-1`: `192.168.56.11`
-  - `hci-node-2`: `192.168.56.12`
-  - `hci-node-3`: `192.168.56.13`
-- VM sizing: 2 vCPU, 2 GB RAM each
+This lab simulates a **real HCI cluster** locally using virtual machines and a distributed filesystem.
 
-## Requirements
+---
 
-- Vagrant
-- VirtualBox
-- 8 GB+ RAM available on the host
-- macOS, Linux, or Windows
+## 🧱 Architecture
+![HCI architecture diagram](screenshots/hci-architecture.png)
 
-## Quick Start
+### Nodes
+
+| Node   | Hostname   | IP Address    |
+| ------ | ---------- | ------------- |
+| Node 1 | hci-node-1 | 192.168.56.11 |
+| Node 2 | hci-node-2 | 192.168.56.12 |
+| Node 3 | hci-node-3 | 192.168.56.13 |
+
+### Resources (per node)
+
+* OS: Ubuntu 22.04 LTS
+* CPU: 2 vCPU
+* RAM: 2 GB
+* Storage:
+
+  * OS Disk: 40 GB
+  * Data Disk: 10 GB (`/data/brick1`)
+* Network: Private host-only network (`192.168.56.0/24`)
+
+---
+
+## 🔗 Networking
+
+* All nodes communicate over a **private network**
+* Enables secure node-to-node communication
+* Required for distributed storage and cluster services
+
+---
+
+## 💾 Storage Layer (GlusterFS)
+
+* **GlusterFS** is used as the software-defined storage layer
+* Each node contributes a storage brick:
+
+  ```
+  /data/brick1
+  ```
+* These bricks form a single logical storage pool
+![GlusterFS status](screenshots/gluster.jpeg)
+
+### Gluster Volume
+
+* Volume name: `hci-vol`
+* Mounted on all nodes at:
+
+  ```
+  /mnt/hci
+  ```
+
+---
+
+## 🧪 Proof of HCI & GlusterFS Functionality
+
+### 1️⃣ Cluster Health Verification
+
+```bash
+sudo gluster peer status
+sudo gluster volume status hci-vol
+```
+
+✔ All peers connected
+✔ All bricks online
+
+---
+
+### 2️⃣ Shared Storage Test (Cross-node I/O)
+![Read test proof](screenshots/read.jpeg)
+
+**Write on hci-node-1**
+
+```bash
+echo "written from node-1 at $(date)" | sudo tee /mnt/hci/proof.txt
+```
+
+**Read on hci-node-2**
+
+```bash
+cat /mnt/hci/proof.txt
+```
+
+**Read on hci-node-3**
+
+```bash
+cat /mnt/hci/proof.txt
+```
+
+✔ Same file visible on all nodes
+✔ Confirms single shared storage pool
+
+---
+
+### 3️⃣ Compute + Storage Convergence
+
+Each node:
+
+* Runs a VM (compute)
+* Hosts a Gluster brick (storage)
+* Uses the same network fabric
+
+✔ This satisfies the **core definition of HCI**
+
+---
+
+### 4️⃣ Persistent Mount Verification
+
+GlusterFS is configured in `/etc/fstab`:
+
+```text
+hci-node-1:/hci-vol  /mnt/hci  glusterfs  defaults,_netdev  0  0
+```
+
+Mount verification:
+
+```bash
+findmnt | grep hci
+```
+
+✔ Ensures storage survives reboots
+✔ Production-style configuration
+
+---
+
+### 5️⃣ Disk Layout Validation
+
+```bash
+lsblk
+```
+
+Shows:
+
+* OS disk (`sda`)
+* Dedicated data disk (`sdb`) used for Gluster brick
+
+✔ Clear separation of system and data storage
+
+![Disk layout](screenshots/lsblk.jpeg)
+
+---
+
+## 🧠 Why This Is Hyperconverged
+
+| HCI Pillar      | How It’s Implemented         |
+| --------------- | ---------------------------- |
+| Compute         | Ubuntu VMs                   |
+| Storage         | GlusterFS distributed volume |
+| Networking      | Private host-only network    |
+| Scalability     | Add node + brick             |
+| Fault tolerance | Distributed storage          |
+
+---
+
+## 📂 Repository Structure
+
+```
+.
+├── Vagrantfile
+├── README.md
+└── scripts/
+    └── common.sh
+```
+
+* `Vagrantfile` – Defines the 3-node cluster
+* `common.sh` – Shared provisioning logic
+* `README.md` – Documentation and simulation proof
+
+---
+
+## 🚀 How to Run
 
 ```bash
 git clone https://github.com/karandesai2005/mini-hyperconverged-infra-lab.git
@@ -39,39 +198,31 @@ SSH into a node:
 vagrant ssh hci-node-1
 ```
 
-Check connectivity (from any node):
+---
 
-```bash
-ping -c 2 192.168.56.12
-ping -c 2 192.168.56.13
-```
+## 📈 Future Enhancements
 
-## Repository Layout
+* Replicated or dispersed Gluster volumes
+* Kubernetes or Docker workloads
+* Monitoring with Prometheus & Grafana
+* Node failure and self-healing demonstrations
+* Hybrid cloud connectivity (VPN)
 
-```
-.
-├── Vagrantfile
-├── README.md
-└── scripts/
-```
+---
 
-## Provisioning
+## 🎯 Conclusion
 
-The `Vagrantfile` runs a shell provisioner at `scripts/common.sh`. Create that file (or update it) to install storage software, container runtimes, monitoring, or configuration tools.
+This project successfully demonstrates a **working Hyperconverged Infrastructure** using:
 
-## Roadmap
+* Commodity virtual machines
+* Software-defined storage
+* Shared networking
+* Open-source tooling
 
-- Add additional virtual disks per node
-- Configure a software-defined storage layer
-- Deploy a containerized workload
-- Add monitoring and observability
-- Explore hybrid connectivity (e.g., VPN to cloud)
+It closely mirrors real-world HCI platforms such as **VMware vSAN**, **Nutanix**, and **Ceph-based clusters**, making it ideal for academic, demo, and learning purposes.
 
-## Troubleshooting
+---
 
-- If `vagrant up` fails, ensure VirtualBox is installed and the `ubuntu/jammy64` box is available.
-- If networking is blocked, verify your host-only adapter settings in VirtualBox.
+## 📜 License
 
-## License
-
-MIT
+MIT License

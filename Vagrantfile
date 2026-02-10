@@ -12,7 +12,6 @@ Vagrant.configure("2") do |config|
         vb.cpus = 2
       end
 
-      # Common setup
       node.vm.provision "shell", path: "scripts/common.sh"
     end
   end
